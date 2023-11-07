@@ -17,7 +17,7 @@ export class TelegramMessengerConfig {
     createMessage() {
         const payload = {
             chat_id: this.studentExtractor.extract().phone,
-            text: this.messageExtractor.extract(),
+            text: this.messageExtractor.extract().message,
         };
         return {
             method: 'POST',

@@ -1,17 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const analytics_1 = require("./modules/analytics");
 const managers_1 = require("./modules/managers");
 const extractors_1 = require("./modules/extractors");
-const handler_1 = require("./modules/handler");
-(0, analytics_1.analytics)('Helo');
-const message = 'hello nodeJS';
-const managerRepository = new managers_1.ManagerRepository();
-const studentExtractor = new extractors_1.StudentExtractor();
-const managerAsmik = managerRepository.getByNick('@asmikguak');
-const studentEgor = studentExtractor;
-const managerExtractor = new extractors_1.ManagerExtractor(studentExtractor, managerAsmik);
-const statusHandler = new handler_1.StatusHandler();
-const messageExtractor = new extractors_1.MessageExtractor(managerExtractor, statusHandler);
-console.log(messageExtractor.extract());
+const telegramConfig_1 = require("./modules/telegramConfig");
+const messenger_1 = require("./modules/messenger");
+const botToken = '6169349504:AAFKvAVRcmW1kDukQ4fUyc8kmrhAfocLKDA';
+new messenger_1.TelegramMessengerClass(new telegramConfig_1.TelegramMessengerConfig(botToken, new extractors_1.MessageExtractor(new extractors_1.ManagerExtractor(new extractors_1.StudentExtractor(), new managers_1.ManagerRepository().getByNick(new extractors_1.StudentExtractor().extract().manager))), new extractors_1.StudentExtractor())).send().then(r => console.log('The message has been successfully sent'));
 //# sourceMappingURL=main.js.map

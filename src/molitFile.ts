@@ -1,12 +1,59 @@
-import {
-    ManagerExtractorInterface,
-    ManagerInterface,
-    ManagerWithStudentInterface, MessageExtractorInterface, MessageInterface,
-    StudentExtractorInterface, StudentInterface
-} from "./interface";
+declare var UrlFetchApp: {
+    fetch(url:  string, param : any)
+};
 
 
-export class StudentExtractor implements StudentExtractorInterface{
+
+//INTERFACES
+
+
+interface StudentInterface {
+    name : string
+    phone : string
+    manager : string
+    status : string
+}
+interface ManagerInterface {
+    name : string
+    phone : string
+    tgNick : string
+}
+interface ManagerWithStudentInterface {
+    manager : ManagerInterface
+    student : StudentInterface
+}
+interface ManagerRepositoryInterface {
+    //init : GoogleTableObject
+    getByNick(tgNick : string) : ManagerInterface
+}
+interface StudentExtractorInterface {
+    //init : ManagerInterface;
+    extract() : StudentInterface
+}
+interface ManagerExtractorInterface {
+    //init: {StudentInterface, ManageInterface}
+    extract() : ManagerWithStudentInterface
+}
+interface MessageInterface {
+    message : string
+}
+interface MessageExtractorInterface {
+    //init : {ManagerExtractorInterface}
+    extract() : MessageInterface
+}
+interface MessengerInterface {
+    //init: {ConfigInterface, MessageExtractorInterface}
+    send() : void
+}
+interface ConfigInterface {
+    get() : void
+}
+
+
+
+//EXTRACTORS
+
+class StudentExtractor implements StudentExtractorInterface{
 
     extract(): StudentInterface {
         let studentObj : StudentInterface = {
@@ -20,7 +67,7 @@ export class StudentExtractor implements StudentExtractorInterface{
 
 }
 
-export class ManagerExtractor implements ManagerExtractorInterface {
+class ManagerExtractor implements ManagerExtractorInterface {
     private studentExtractor: StudentExtractor;
     private readonly manager: ManagerInterface;
 
@@ -38,14 +85,14 @@ export class ManagerExtractor implements ManagerExtractorInterface {
 
 }
 
-export class MessageExtractor implements MessageExtractorInterface{
+class MessageExtractor implements MessageExtractorInterface{
     private managerExtractor: ManagerExtractor;
     constructor(managerExtractor : ManagerExtractor) {
         this.managerExtractor = managerExtractor
 
     }
     extract(): MessageInterface {
-        let message;
+        let message = '';
         switch (this.managerExtractor.extract().student.status) {
             case 'Запись на занятие':
                 message = `Здравствуйте и добро пожаловать в «Импульс») Вы записались на бесплатное вводное занятие с экспертом.\nВ ближайшее время Вам наберет менеджер, будьте на связи!\nХорошего дня😊`
@@ -84,3 +131,104 @@ export class MessageExtractor implements MessageExtractorInterface{
     }
 
 }
+
+//MANAGERS
+
+class ManagerRepository implements ManagerRepositoryInterface{
+    private managers : ManagerInterface[];
+    constructor() {
+        //ЭТО MOCK MANAGERS
+        this.managers = [
+            {name : 'ManagerAsmik', tgNick: '@asmikguak', phone: '89144597147'},
+            {name : 'ManagerAndrey', tgNick: '@andruha', phone: '89143141592'},
+            {name: 'ManagerDmitriy', tgNick: '@dimas', phone:  '31415926535'},
+        ]
+    }
+    getByNick(tgNick : string): ManagerInterface{
+        let manager= this.managers.find(manager => manager.tgNick === tgNick)
+        if (manager === undefined || manager === null) {
+            return {name: 'UNDEFINED', tgNick: '@UNDEFINED', phone:  'UNDEFINED'}
+        }
+        return manager;
+    }
+
+}
+
+
+//CONFIG_TG
+
+class TelegramMessengerConfig {
+    private readonly apiUrl: string;
+    private messageExtractor: MessageExtractor;
+    private studentExtractor: StudentExtractor;
+    constructor(token : string, messageExtractor : MessageExtractor, studentExtractor: StudentExtractor) {
+        this.apiUrl = `https://api.telegram.org/bot${token}/sendMessage`;
+        this.messageExtractor = messageExtractor
+        this.studentExtractor = studentExtractor
+    }
+
+    getApiUrl() {
+        return this.apiUrl
+    }
+    createMessage() {
+        const payload = {
+            chat_id: this.studentExtractor.extract().phone,
+            text: this.messageExtractor.extract().message,
+        };
+        return {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            payload: JSON.stringify(payload),
+        };
+    }
+}
+
+//MESSENGER
+class TelegramMessenger implements MessengerInterface {
+    private telegramMessengerConfig: TelegramMessengerConfig;
+
+    constructor(telegramMessengerConfig: TelegramMessengerConfig) {
+        this.telegramMessengerConfig = telegramMessengerConfig
+    }
+
+    async send(): Promise<void> {
+        const messageConfig = this.telegramMessengerConfig.createMessage();
+        try {
+            const response = await fetch(this.telegramMessengerConfig.getApiUrl(), messageConfig);
+            const data = await response.json();
+            // Обработка ответа от Telegram API, если необходимо
+            console.log(data);
+        } catch (error) {
+            // Обработка ошибок при отправке сообщения
+            console.error('Произошла ошибка при отправке сообщения:', error);
+        }
+    }
+
+    sendSync() : void {
+        const messageConfig = this.telegramMessengerConfig.createMessage();
+        const response = UrlFetchApp.fetch(this.telegramMessengerConfig.getApiUrl(), messageConfig);
+
+    }
+}
+
+//CONFIG
+
+
+
+
+//MAIN
+function main() {
+    new TelegramMessenger(
+        new TelegramMessengerConfig('botToken',
+            new MessageExtractor(
+                new ManagerExtractor(
+                    new StudentExtractor(),
+                    new ManagerRepository().getByNick(
+                        new StudentExtractor().extract().manager))),
+            new StudentExtractor())).sendSync()
+
+}
+
+

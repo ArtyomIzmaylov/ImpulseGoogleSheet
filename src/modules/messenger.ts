@@ -2,7 +2,7 @@ import {MessengerInterface} from "./interface";
 import {MessageExtractor} from "./extractors";
 import {TelegramMessengerConfig} from "./telegramConfig";
 
-export class TelegramMessengerClass implements MessengerInterface{
+export class TelegramMessenger implements MessengerInterface{
     private telegramMessengerConfig: TelegramMessengerConfig;
 
     constructor(telegramMessengerConfig : TelegramMessengerConfig) {
