@@ -1,14 +1,10 @@
 import {ManagerInterface, ManagerRepositoryInterface} from "./interface";
+import {ManagerExtractor} from "./extractors";
 
 export class ManagerRepository implements ManagerRepositoryInterface{
     private managers : ManagerInterface[];
-    constructor() {
-        //ЭТО MOCK MANAGERS
-        this.managers = [
-            {name : 'ManagerAsmik', tgNick: '@asmikguak', phone: '89144597147'},
-            {name : 'ManagerAndrey', tgNick: '@andruha', phone: '89143141592'},
-            {name: 'ManagerDmitriy', tgNick: '@dimas', phone:  '31415926535'},
-        ]
+    constructor(managers : ManagerInterface[]) {
+        this.managers = managers
     }
     getByNick(tgNick : string): ManagerInterface{
         let manager= this.managers.find(manager => manager.tgNick === tgNick)

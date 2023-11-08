@@ -54,17 +54,13 @@ interface ConfigInterface {
 //EXTRACTORS
 
 class StudentExtractor implements StudentExtractorInterface{
-
-    extract(): StudentInterface {
-        let studentObj : StudentInterface = {
-            name : 'Egorka',
-            phone : '926411775',
-            manager : '@asmikguak',
-            status : '2-й недозвон'
-        }
-        return studentObj
+    private student: StudentInterface;
+    constructor(student : StudentInterface) {
+        this.student = student
     }
-
+    extract(): StudentInterface {
+        return this.student
+    }
 }
 
 class ManagerExtractor implements ManagerExtractorInterface {
@@ -92,10 +88,10 @@ class MessageExtractor implements MessageExtractorInterface{
 
     }
     extract(): MessageInterface {
-        let message = '';
+        let message;
         switch (this.managerExtractor.extract().student.status) {
             case 'Запись на занятие':
-                message = `Здравствуйте и добро пожаловать в «Импульс») Вы записались на бесплатное вводное занятие с экспертом.\nВ ближайшее время Вам наберет менеджер, будьте на связи!\nХорошего дня😊`
+                message = `Привет! Мы записали тебя на занятие, которое пройдет ${this.managerExtractor.extract().student.status}. Хорошего урока :)\nИмя твоего менеджера: ${this.managerExtractor.extract().manager.name}\nНомер телефона: ${this.managerExtractor.extract().manager.phone}`
                 break;
             case "Новая заявка(тильда, без родителя)":
                 message = `Здравствуйте и добро пожаловать в «Импульс») Вы записались на бесплатное вводное занятие с экспертом. \nВ ближайшее время Вам наберет менеджер, будьте на связи!\nХорошего дня😊`
@@ -125,7 +121,8 @@ class MessageExtractor implements MessageExtractorInterface{
                 message = `Привет! Очень надеемся, что вам понравилось занятие. Будем очень рады, если вы в ответном сообщении оцените урок от 1 до 10, где 10 – это невероятно круто)`;
                 break
             default:
-                message =`Непонятный статус: ${this.managerExtractor.extract().student.status}`;
+                message = `Привет! Мы записали тебя на занятие, которое пройдет ${this.managerExtractor.extract().student.status}. Хорошего урока :)\nИмя твоего менеджера: ${this.managerExtractor.extract().manager.name}\nНомер телефона: ${this.managerExtractor.extract().manager.phone}`
+
         }
         return {message : message}
     }
@@ -136,13 +133,8 @@ class MessageExtractor implements MessageExtractorInterface{
 
 class ManagerRepository implements ManagerRepositoryInterface{
     private managers : ManagerInterface[];
-    constructor() {
-        //ЭТО MOCK MANAGERS
-        this.managers = [
-            {name : 'ManagerAsmik', tgNick: '@asmikguak', phone: '89144597147'},
-            {name : 'ManagerAndrey', tgNick: '@andruha', phone: '89143141592'},
-            {name: 'ManagerDmitriy', tgNick: '@dimas', phone:  '31415926535'},
-        ]
+    constructor(managers : ManagerInterface[]) {
+        this.managers = managers
     }
     getByNick(tgNick : string): ManagerInterface{
         let manager= this.managers.find(manager => manager.tgNick === tgNick)
@@ -213,22 +205,48 @@ class TelegramMessenger implements MessengerInterface {
     }
 }
 
-//CONFIG
+
+function mainTaskEge(inputDataManagersFromEge: Array<any>,inputDataStudentFromEge : Array<any>, botToken : string, inputDataStudentFromEgeStatus : string) {
+    //НАМ ПРИЛЕТАЕТ МАССИВ ДАННЫХ ТАКИХ
+    /*    inputDataManagersFromTilda = [
+            ["Маргарита Голованова", '89141516', "Маргарита"],
+            ["Дарья Дмитриева", '89141516', "Дарья Дмитриева"],
+            ["Джульетта", '89141516', "Julietta"],
+            ["Арина Смолякова", '89141516', "Арина Смолякова"],
+            ["Тамара Соловьева", '89141516', "Тамара Соловьева"],
+            ["", '89141516', "Arthur Arakelyan 🇦🇲"],
+            ["", "", ""]
+        ];*/
+
+    const managersFromEge : ManagerInterface[] = inputDataManagersFromEge.map((item)=> {
+        return {
+            name: item[0],
+            phone: item[4],
+            tgNick: item[3]
+        }
+    })
+    //НАМ ПРИЛЕТАЮТ ДАННЫЕ СТУДЕНТА
+    /*
+        const inputDataStudentFromTilda = ["Соня Ученица", "П3 – Пробники", "", "926411775", "МЕНЕДЖЕР Асмик Гукасян", "Проведено"]
+    */
+
+    const studentFromEge : StudentInterface = {
+        name : inputDataStudentFromEge[1],
+        phone: inputDataStudentFromEge[2],
+        manager : inputDataStudentFromEge[10],
+        status : inputDataStudentFromEgeStatus,
+    }
 
 
 
-
-//MAIN
-function main() {
     new TelegramMessenger(
-        new TelegramMessengerConfig('botToken',
+        new TelegramMessengerConfig(botToken,
             new MessageExtractor(
                 new ManagerExtractor(
-                    new StudentExtractor(),
-                    new ManagerRepository().getByNick(
-                        new StudentExtractor().extract().manager))),
-            new StudentExtractor())).sendSync()
+                    new StudentExtractor(studentFromEge),
+                    new ManagerRepository(managersFromEge).getByNick(
+                        new StudentExtractor(studentFromEge).extract().manager))),
+            new StudentExtractor(studentFromEge))).sendSync()
 
 }
-
 
