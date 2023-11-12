@@ -1,3 +1,0 @@
-import {ManagerInterface} from "./interface";
-
-

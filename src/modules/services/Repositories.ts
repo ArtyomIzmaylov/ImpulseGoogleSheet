@@ -1,5 +1,5 @@
-import {ManagerInterface, ManagerRepositoryInterface} from "./interface";
-import {ManagerExtractor} from "./extractors";
+import {ManagerRepositoryInterface} from "../interfaces/RepositoryInterfaces";
+import {ManagerInterface} from "../interfaces/EntityInterfaces";
 
 export class ManagerRepository implements ManagerRepositoryInterface{
     private managers : ManagerInterface[];
