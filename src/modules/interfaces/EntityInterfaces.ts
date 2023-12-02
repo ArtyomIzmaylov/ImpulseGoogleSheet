@@ -3,6 +3,7 @@ export interface StudentInterface {
     phone : string
     manager : string
     status : string
+    time? : string
 }
 
 export interface ManagerInterface {

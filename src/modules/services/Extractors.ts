@@ -41,7 +41,6 @@ export class ManagerExtractor implements ManagerExtractorInterface {
 
 }
 
-
 export class MessageForEgeExtractor implements MessageExtractorInterface {
     private managerExtractor: ManagerExtractor;
 
@@ -52,7 +51,6 @@ export class MessageForEgeExtractor implements MessageExtractorInterface {
     extract(): MessageInterface {
         const studentStatus = this.managerExtractor.extract().student.status;
         let message = '';
-
         switch (studentStatus) {
             case "1-й недозвон":
                 message = this.buildFirstNonAnsweredCallMessage();
@@ -97,30 +95,24 @@ export class MessageForTildaExtractor implements MessageExtractorInterface {
         let message = '';
 
         switch (studentStatus) {
-            case "1-й недозвон":
-                message = this.buildFirstNonAnsweredCallMessage();
-                break;
             case "Ожидаем отета. 1 День":
                 message = this.buildWaitingForResponseMessage();
                 break;
             case "Проведено":
                 message = this.buildLessonDoneMessage();
                 break;
-            default:
+            case "Запись":
                 message = this.buildDefaultMessage();
+                break
+            default:
                 break;
         }
 
-        return { message };
-    }
-
-    private buildFirstNonAnsweredCallMessage(): string {
-        const { student, manager } = this.managerExtractor.extract();
-        return `Привет, ${student.name}! Только что вам звонил менеджер по поводу пробного экзамена. Перезвоните ему пожалуйста или напишите в ВА или ТГ.\nИмя менеджера: ${manager.name}\nНомер телефона: ${manager.phone}\nХорошо?)`;
+        return {message : message };
     }
 
     private buildWaitingForResponseMessage(): string {
-        const { manager } = this.managerExtractor.extract();
+        const manager = this.managerExtractor.extract().manager;
         return `Привет! Только что вам звонил менеджер по поводу вводного занятия. Перезвоните ему пожалуйста или напишите в ВА или ТГ.\nИмя менеджера: ${manager.name}\nНомер телефона: ${manager.phone}\nХорошо?)`;
     }
 
@@ -129,7 +121,9 @@ export class MessageForTildaExtractor implements MessageExtractorInterface {
     }
 
     private buildDefaultMessage(): string {
-        const { student, manager } = this.managerExtractor.extract();
-        return `Привет, ${student.name}! Мы записали тебя на занятие, которое пройдет ${student.status}. Хорошего урока :)\nИмя твоего менеджера: ${manager.name}\nНомер телефона: ${manager.phone}\nДля подтверждения напиши мне что-угодно в ответном сообщении)`;
+        //const { student, manager } = this.managerExtractor.extract();
+        const student = this.managerExtractor.extract().student
+        const manager = this.managerExtractor.extract().manager
+        return `Привет, ${student.name}! Мы записали тебя на занятие, которое пройдет ${student.time}. Хорошего урока :)\nИмя твоего менеджера: ${manager.name}\nНомер телефона: ${manager.phone}\nДля подтверждения напиши мне что-угодно в ответном сообщении)`;
     }
 }

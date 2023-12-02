@@ -6,6 +6,7 @@ export interface RequestInterface {
     method : string
     headers : {}
     body : string
+    payload? : string
 }
 
 export interface WhatsAppPayloadInterface extends PayloadInterface{
@@ -16,8 +17,10 @@ export interface WhatsAppPayloadInterface extends PayloadInterface{
     // Другие свойства, специфичные для WhatsApp
 }
 export interface TelegramPayloadInterface extends PayloadInterface{
-    chat_id: string;
-    text: string;
+    message : string
+    phone : string
+    hmacMessage : string
+    hmacPhone : string
 }
 
 

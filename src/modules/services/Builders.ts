@@ -8,23 +8,8 @@ import {
     StudentExtractorInterface
 } from "../interfaces/ExtractorInterfaces";
 import {BuildPayloadInterface, BuildStatusMessageInterface} from "../interfaces/BuilderInterfaces";
+import {calculateHMAC, secretKet} from "./CryptoService";
 
-export class TelegramRequestBuilder implements BuildPayloadInterface{
-    private messageExtractor: MessageExtractorInterface;
-    private studentExtractor: StudentExtractorInterface;
-    constructor(messageExtractor : MessageExtractorInterface, studentExtractor : StudentExtractorInterface) {
-        this.messageExtractor = messageExtractor
-        this.studentExtractor = studentExtractor
-    }
-
-    build() : TelegramPayloadInterface{
-        return  {
-            chat_id: this.studentExtractor.extract().phone,
-            text: this.messageExtractor.extract().message,
-        }
-    }
-
-}
 
 
 export class WhatsAppRequestBuilder implements BuildPayloadInterface{
@@ -46,6 +31,28 @@ export class WhatsAppRequestBuilder implements BuildPayloadInterface{
     }
 
 }
+
+export class TelegramRequestBuilder implements BuildPayloadInterface{
+    private messageExtractor: MessageExtractorInterface;
+    private studentExtractor: StudentExtractorInterface;
+    constructor(messageExtractor : MessageExtractorInterface, studentExtractor : StudentExtractorInterface) {
+        this.messageExtractor = messageExtractor
+        this.studentExtractor = studentExtractor
+    }
+    build() : TelegramPayloadInterface{
+        return  {
+            message: this.messageExtractor.extract().message,
+            phone: this.studentExtractor.extract().phone,
+            hmacMessage : calculateHMAC(this.messageExtractor.extract().message, secretKet),
+            hmacPhone : calculateHMAC(this.studentExtractor.extract().phone, secretKet),
+
+
+        }
+    }
+
+}
+
+
 
 
 export class StatusMessageBuilderTilda implements BuildStatusMessageInterface{
