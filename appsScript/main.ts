@@ -387,7 +387,7 @@ function sendMessageToEge(inputDataManager : string[][], inputDataStudent: strin
         manager : inputDataStudent[10],
         status : inputDataStudent[12]
     }
-
+    console.log('Work')
 
     const telegramRequestPayload = JSON.stringify(
         new TelegramRequestBuilder(
